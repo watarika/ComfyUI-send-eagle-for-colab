@@ -18,16 +18,16 @@ from .my_types import TNodeParams, TGenInfo
 
 FORCE_WRITE_PROMPT = False
 
-
-
 class D2_SendEagle:
     def __init__(self):
         self.output_dir = folder_paths.get_output_directory()
         self.type = "output"
         self.output_folder = ""
         self.subfolder_name = ""
-        self.eagle_server_url = os.environ.get("EAGLE_SERVER_URL", None)  # 環境変数から取得
-        self.eagle_api = EagleAPI(self.eagle_server_url) # EagleAPIの初期化時にサーバーURLを渡す
+        self.eagle_server_url = os.environ.get("EAGLE_SERVER_URL", "http://localhost:41595")
+        self.comfyui_url = os.environ.get("EAGLE_COMFYUI_URL", "http://localhost:8188")
+        self.eagle_api = EagleAPI(self.eagle_server_url)
+
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -166,9 +166,12 @@ class D2_SendEagle:
         # Eagleフォルダが指定されているならフォルダIDを取得
         folder_id = self.eagle_api.find_or_create_folder(params["eagle_folder"])
 
+        # Eagleに送るURLを作成
+        url = f"{self.comfyui_url}/api/view?filename={file_name}&type={self.type}&subfolder={self.subfolder_name}"
+
         # Eagleに送る情報を作成
         item = {
-            "path": file_full_path,
+            "url": url,
             "name": file_name,
             "annotation": formated_info,
             "tags": [],
@@ -177,7 +180,7 @@ class D2_SendEagle:
         # タグを取得
         item["tags"] = self.get_tags(params, gen_info)
 
-        _ret = self.eagle_api.add_item_from_path(data=item, folder_id=folder_id)
+        _ret = self.eagle_api.add_item_from_url(data=item, folder_id=folder_id)
 
         return {
             "filename": file_name, "subfolder": self.subfolder_name, "type": self.type

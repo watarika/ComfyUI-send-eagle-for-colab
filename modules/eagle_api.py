@@ -14,10 +14,10 @@ class EagleAPI:
 
     # #########################################
     # 画像をEagleに送信
-    def add_item_from_path(self, data, folder_id=None):
+    def add_item_from_url(self, data, folder_id=None):
         if folder_id:
             data["folderId"] = folder_id
-        return self._send_request("/api/item/addFromPath", method="POST", data=data)
+        return self._send_request("/api/item/addFromURL", method="POST", data=data)
 
 
     # #########################################
