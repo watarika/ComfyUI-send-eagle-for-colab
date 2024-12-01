@@ -26,8 +26,8 @@ class D2_SendEagle:
         self.type = "output"
         self.output_folder = ""
         self.subfolder_name = ""
-        self.eagle_api:EagleAPI = EagleAPI()
-
+        self.eagle_server_url = os.environ.get("EAGLE_SERVER_URL", None)  # 環境変数から取得
+        self.eagle_api = EagleAPI(self.eagle_server_url) # EagleAPIの初期化時にサーバーURLを渡す
 
     @classmethod
     def INPUT_TYPES(cls):
