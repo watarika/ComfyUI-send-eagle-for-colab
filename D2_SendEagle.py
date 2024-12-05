@@ -1,5 +1,6 @@
 import json
 import os
+import traceback
 import numpy as np
 import json
 from typing import Dict, Optional
@@ -163,24 +164,31 @@ class D2_SendEagle:
         # 画像をローカルに保存
         file_name, file_full_path = self.save_image(img, params, gen_info, formated_info)
 
-        # Eagleフォルダが指定されているならフォルダIDを取得
-        folder_id = self.eagle_api.find_or_create_folder(params["eagle_folder"])
+        # Eagleに画像を送る（失敗してもエラーにしない）
+        try:
+            # Eagleフォルダが指定されているならフォルダIDを取得
+            folder_id = self.eagle_api.find_or_create_folder(params["eagle_folder"])
 
-        # Eagleに送るURLを作成
-        url = f"{self.comfyui_url}/api/view?filename={file_name}&type={self.type}&subfolder={self.subfolder_name}"
+            # Eagleに送るURLを作成
+            url = f"{self.comfyui_url}/api/view?filename={file_name}&type={self.type}&subfolder={self.subfolder_name}"
 
-        # Eagleに送る情報を作成
-        item = {
-            "url": url,
-            "name": file_name,
-            "annotation": formated_info,
-            "tags": [],
-        }
+            # Eagleに送る情報を作成
+            item = {
+                "url": url,
+                "name": file_name,
+                "annotation": formated_info,
+                "tags": [],
+            }
 
-        # タグを取得
-        item["tags"] = self.get_tags(params, gen_info)
+            # タグを取得
+            item["tags"] = self.get_tags(params, gen_info)
 
-        _ret = self.eagle_api.add_item_from_url(data=item, folder_id=folder_id)
+            _ret = self.eagle_api.add_item_from_url(data=item, folder_id=folder_id)
+        
+        except Exception as e:
+            print("Error: Cannot send image to Eagle")
+            print(e)
+            traceback.print_exc() 
 
         return {
             "filename": file_name, "subfolder": self.subfolder_name, "type": self.type
