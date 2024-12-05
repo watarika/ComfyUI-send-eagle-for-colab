@@ -1,6 +1,7 @@
 from os import name
 from typing import Dict, Optional, TypedDict, Union, List
 import requests
+from urllib.parse import urlparse
 
 class FolderInfo(TypedDict):
     id: str
@@ -9,8 +10,13 @@ class FolderInfo(TypedDict):
 
 class EagleAPI:
     def __init__(self, base_url="http://localhost:41595"):
-        self.base_url = base_url
+        # Basic認証のIDとパスワード付きURLの場合、IDとパスワードをURLから分離する
+        parsed_url = urlparse(base_url)
+        self.basic_auth_id = parsed_url.username if parsed_url.username else None
+        self.basic_auth_password = parsed_url.password if parsed_url.password else None
+        self.base_url = base_url.replace(f"{self.basic_auth_id}:{self.basic_auth_password}@", "", 1)
         self.folder_list: Optional[List[FolderInfo]] = None
+        print(f"EagleAPI Server:", self.base_url)
 
     # #########################################
     # 画像をEagleに送信
@@ -90,9 +96,15 @@ class EagleAPI:
 
         try:
             if method == "GET":
-                response = requests.get(url, headers=headers)
+                if self.basic_auth_id and self.basic_auth_password:
+                    response = requests.get(url, headers=headers, auth=(self.basic_auth_id, self.basic_auth_password))
+                else:
+                    response = requests.get(url, headers=headers)
             elif method == "POST":
-                response = requests.post(url, headers=headers, json=data)
+                if self.basic_auth_id and self.basic_auth_password:
+                    response = requests.post(url, headers=headers, json=data, auth=(self.basic_auth_id, self.basic_auth_password))
+                else:
+                    response = requests.post(url, headers=headers, json=data)
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
 
