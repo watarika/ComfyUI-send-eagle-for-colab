@@ -8,6 +8,7 @@ from typing import Dict, Optional
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import folder_paths
 
@@ -264,7 +265,7 @@ class D2_SendEagle:
     # ######################
     # 画像保存パスを取得
     def get_output_folder(self):
-        subfolder_name = datetime.now().strftime("%Y-%m-%d")
+        subfolder_name = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
 
         # 画像保存用フォルダが無ければ作成
         output_folder = os.path.join(self.output_dir, subfolder_name)

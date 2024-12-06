@@ -6,6 +6,7 @@ from PIL import Image
 import piexif
 import piexif.helper
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from typing import Dict, Optional, TypedDict, Union, List
 from ..my_types import TGenInfo
 
@@ -61,7 +62,7 @@ class util:
         Gets the current datetime as a string with millisecond precision.
         This method generates and returns a string representing the current datetime with millisecond precision.
         """
-        now = datetime.now()
+        now = datetime.now(ZoneInfo("Asia/Tokyo"))
         date_time_str = now.strftime("%Y%m%d_%H%M%S")
         return f"{date_time_str}_{now.microsecond:06}"
 
