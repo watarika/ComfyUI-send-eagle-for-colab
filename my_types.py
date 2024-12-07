@@ -10,6 +10,7 @@ class TNodeParams(TypedDict):
     compression: int
     positive: str
     negative: str
+    save_only: bool
     memo_text: str
     prompt: Optional[Dict]
     extra_pnginfo: Optional[Dict]

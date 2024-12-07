@@ -1,6 +1,5 @@
 import json
 import os
-import traceback
 import numpy as np
 import json
 from typing import Dict, Optional
@@ -79,6 +78,11 @@ class D2_SendEagle:
                     "BOOLEAN",
                     {"default": True, "label_on": "ON", "label_off": "OFF"},
                 ),
+                # Eagleに送信せずに保存のみ行うか
+                "save_only": (
+                    "BOOLEAN",
+                    {"default": False, "label_on": "ON", "label_off": "OFF"},
+                ),
             },
             "optional":{
                 # その他メモ
@@ -111,6 +115,7 @@ class D2_SendEagle:
         positive = "",
         negative = "",
         preview = True,
+        save_only = False,
         memo_text = "",
         prompt: Optional[Dict] = None,
         extra_pnginfo: Optional[Dict] = None,
@@ -127,6 +132,7 @@ class D2_SendEagle:
             "compression": compression,
             "positive": positive,
             "negative": negative,
+            "save_only": save_only,
             "memo_text": memo_text,
             "prompt": prompt,
             "extra_pnginfo": extra_pnginfo,
@@ -165,8 +171,8 @@ class D2_SendEagle:
         # 画像をローカルに保存
         file_name, file_full_path = self.save_image(img, params, gen_info, formated_info)
 
-        # Eagleに画像を送る（失敗してもエラーにしない）
-        try:
+        # Eagleに画像を送る
+        if not params["save_only"]:
             # Eagleフォルダが指定されているならフォルダIDを取得
             folder_id = self.eagle_api.find_or_create_folder(params["eagle_folder"])
 
@@ -184,12 +190,7 @@ class D2_SendEagle:
             # タグを取得
             item["tags"] = self.get_tags(params, gen_info)
 
-            _ret = self.eagle_api.add_item_from_url(data=item, folder_id=folder_id)
-        
-        except Exception as e:
-            print("Error: Cannot send image to Eagle")
-            print(e)
-            traceback.print_exc() 
+            _ret = self.eagle_api.add_item_from_url(data=item, folder_id=folder_id)        
 
         return {
             "filename": file_name, "subfolder": self.subfolder_name, "type": self.type
