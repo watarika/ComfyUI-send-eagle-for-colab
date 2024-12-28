@@ -138,8 +138,14 @@ class D2_SendEagle:
             "extra_pnginfo": extra_pnginfo,
         }
 
-        for image in images:
-          results.append(self.create_image_object(image, params))
+        # imagesのサイズが1の場合（batch_sizeが1の場合）はファイル名にカウントをつけない
+        if len(images) == 1:
+            results.append(self.create_image_object(images[0], params, None))
+        else:
+            count = 0 # 0オリジン
+            for image in images:
+                results.append(self.create_image_object(image, params, count))
+                count += 1
 
         if(preview):
             return {
@@ -154,7 +160,7 @@ class D2_SendEagle:
 
     # ######################
     # イメージオブジェクトを作成
-    def create_image_object(self, image, params:TNodeParams) -> dict:
+    def create_image_object(self, image, params:TNodeParams, count) -> dict:
         normalized_pixels = 255.0 * image.cpu().numpy()
         img = Image.fromarray(np.clip(normalized_pixels, 0, 255).astype(np.uint8))
 
@@ -169,7 +175,7 @@ class D2_SendEagle:
         # print("format_info", formated_info)
 
         # 画像をローカルに保存
-        file_name, file_full_path = self.save_image(img, params, gen_info, formated_info)
+        file_name, file_full_path = self.save_image(img, params, gen_info, formated_info, count)
 
         # Eagleに画像を送る
         if not params["save_only"]:
@@ -213,13 +219,13 @@ class D2_SendEagle:
 
     # ######################
     # 画像をローカルに保存
-    def save_image(self, img, params:TNodeParams, gen_info:TGenInfo, formated_info:str):
+    def save_image(self, img, params:TNodeParams, gen_info:TGenInfo, formated_info:str, count):
         file_name = ""
         file_full_path = ""
 
         if params["format"] == "webp":
             # Save webp image file
-            file_name = self.get_filename(params["filename_template"], 'webp', gen_info)
+            file_name = self.get_filename(params["filename_template"], 'webp', gen_info, count)
             file_full_path = os.path.join(self.output_folder, file_name)
 
             exif = util.get_exif_from_prompt(img, formated_info, params["extra_pnginfo"], params["prompt"])
@@ -233,7 +239,7 @@ class D2_SendEagle:
 
         elif params["format"] == "jpeg":
             # Save jpeg image file
-            file_name = self.get_filename(params["filename_template"], 'jpeg', gen_info)
+            file_name = self.get_filename(params["filename_template"], 'jpeg', gen_info, count)
             file_full_path = os.path.join(self.output_folder, file_name)
 
             exif = util.get_exif_from_prompt(img, formated_info, params["extra_pnginfo"], params["prompt"])
@@ -247,7 +253,7 @@ class D2_SendEagle:
 
         else:
             # Save png image file
-            file_name = self.get_filename(params["filename_template"], 'png', gen_info)
+            file_name = self.get_filename(params["filename_template"], 'png', gen_info, count)
             file_full_path = os.path.join(self.output_folder, file_name)
 
             metadata = PngInfo()
@@ -290,7 +296,7 @@ class D2_SendEagle:
 
     # ######################
     # ファイルネームを取得
-    def get_filename(self, template:str, ext:str, gen_info:TGenInfo) -> str:
+    def get_filename(self, template:str, ext:str, gen_info:TGenInfo, count) -> str:
         base = template.format(
           width = gen_info["width"],
           height = gen_info["height"],
@@ -299,4 +305,7 @@ class D2_SendEagle:
           seed = gen_info["seed"],
         )
 
-        return f"{util.get_datetime_str_msec()}-{base}.{ext}"
+        if count is None:
+            return f"{util.get_datetime_str_msec()}-{base}.{ext}"
+        else:
+            return f"{util.get_datetime_str_msec()}-{base}({count}).{ext}"
