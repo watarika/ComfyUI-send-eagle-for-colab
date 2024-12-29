@@ -3,6 +3,7 @@ import os
 import numpy as np
 import json
 from typing import Dict, Optional
+import re
 
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
@@ -59,6 +60,7 @@ class D2_SendEagle:
                 # プロンプトやモデルをEagleタグに保存するか
                 "save_tags": ([
                     "None",
+                    "MemoText",
                     "Prompt + Checkpoint",
                     "Prompt",
                     "Checkpoint",
@@ -205,14 +207,17 @@ class D2_SendEagle:
     # ######################
     # 登録タグを取得
     def get_tags(self, params:TNodeParams, gen_info:TGenInfo) -> list:
-        if(params["save_tags"] == "Prompt + Checkpoint"):
-          return [*util.get_prompt_tags(gen_info["positive"]), gen_info["model_name"]]
+        if(params["save_tags"] == "MemoText"):
+            return util.get_memotext_tags(params["memo_text"])  
+        
+        elif(params["save_tags"] == "Prompt + Checkpoint"):
+            return [*util.get_prompt_tags(gen_info["positive"]), gen_info["model_name"]]
 
         elif(params["save_tags"] == "Prompt"):
-          return util.get_prompt_tags(gen_info["positive"])
+            return util.get_prompt_tags(gen_info["positive"])
 
         elif(params["save_tags"] == "Checkpoint"):
-          return [gen_info["model_name"]]
+            return [gen_info["model_name"]]
 
         return []
 

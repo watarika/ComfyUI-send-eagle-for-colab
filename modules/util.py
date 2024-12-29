@@ -106,3 +106,16 @@ class util:
             for item in items
             if re.sub(r"[\(\)]", "", item).strip()
         ]
+
+
+    @staticmethod
+    def get_memotext_tags(memo_text: str) -> list:
+        if not isinstance(memo_text, str) or not memo_text.strip():
+            return []
+
+        items = memo_text.split(",")
+        return [
+            re.sub(r"[\(\)]", "", item).strip()
+            for item in items
+            if re.sub(r"[\(\)]", "", item).strip()
+        ]
