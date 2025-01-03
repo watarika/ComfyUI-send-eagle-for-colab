@@ -95,10 +95,10 @@ class ParamsExtractor:
         width, height = self._extract_image_size(ksampler)
         gen_info["width"] = width
         gen_info["height"] = height
-        gen_info["steps"] = ksampler["inputs"]["steps"]
-        gen_info["sampler_name"] = self._extract_sampler_name(ksampler)
-        gen_info["scheduler"] = ksampler["inputs"]["scheduler"]
-        gen_info["cfg"] = ksampler["inputs"]["cfg"]
+        gen_info["steps"] = self._extract_everywhere(ksampler["inputs"]["steps"])
+        gen_info["sampler_name"] = self._extract_everywhere(self._extract_sampler_name(ksampler))
+        gen_info["scheduler"] = self._extract_everywhere(ksampler["inputs"]["scheduler"])
+        gen_info["cfg"] = self._extract_everywhere(ksampler["inputs"]["cfg"])
         gen_info["seed"] = ksampler["inputs"].get(
             "seed", ksampler["inputs"].get("noise_seed", None)
         )
@@ -174,6 +174,21 @@ class ParamsExtractor:
 
         else:
             return 0, 0
+
+    # ######################
+    # anything everywhere対応
+    def _extract_everywhere(self, value):
+        # valueが['key', index]の形式なら、_promptから値を取得
+        if isinstance(value, list) and len(value) == 2:
+            try:
+                key, index = value
+                item = list(self._prompt[key]["inputs"].keys())[index]
+                return self._prompt[key]["inputs"][item]
+            except:
+                return value
+
+        return value
+
 
     # ######################
     # PngInfoやEagleメモ用のテキストに整形
